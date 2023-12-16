@@ -11,6 +11,7 @@ import { Form, Formik } from "formik";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { parseEther } from "viem";
 import {
   useAccount,
   useNetwork,
@@ -297,7 +298,7 @@ function StepFinal(props: { params: NewTokenParams; onCompleted: () => void }) {
           args: [
             props.params.name as string,
             props.params.symbol as string,
-            BigInt(props.params.initialSupply as number),
+            parseEther(String(props.params.initialSupply)),
             chainToSupportedChainConfig(chain).contracts.registry,
             chainToSupportedChainConfig(chain).contracts.sfs,
           ],
