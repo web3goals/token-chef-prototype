@@ -6,8 +6,10 @@ import {
   MediumLoadingButton,
 } from "@/components/styled";
 import { registryAbi } from "@/contracts/abi/registry";
+import { sfsAbi } from "@/contracts/abi/sfs";
 import { tokenAbi } from "@/contracts/abi/token";
 import useError from "@/hooks/useError";
+import useToasts from "@/hooks/useToast";
 import { theme } from "@/theme";
 import { chainToSupportedChainConfig } from "@/utils/chains";
 import { addressToShortAddress } from "@/utils/converters";
@@ -21,7 +23,7 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getContract, zeroAddress } from "viem";
+import { formatEther, getContract, zeroAddress } from "viem";
 import {
   useAccount,
   useContractRead,
@@ -75,8 +77,10 @@ function TokenCard(props: { contract: `0x${string}` }) {
   const { chain } = useNetwork();
   const publicClient = usePublicClient();
   const { handleError } = useError();
-  const [contractParams, setContractParams] = useState<
-    { name: string; symbol: string; totalSupply: bigint } | undefined
+  const { showToastWarning } = useToasts();
+  const [tokenParams, setTokenParams] = useState<
+    | { name: string; symbol: string; totalSupply: bigint; sfsBalance: bigint }
+    | undefined
   >();
   const contractLink = `${
     chainToSupportedChainConfig(chain).chain.blockExplorers?.default.url
@@ -84,19 +88,34 @@ function TokenCard(props: { contract: `0x${string}` }) {
 
   async function loadData() {
     try {
-      setContractParams(undefined);
-      const contract = getContract({
+      setTokenParams(undefined);
+      // Define data using token contract
+      const tokenContract = getContract({
         address: props.contract,
         abi: tokenAbi,
         publicClient: publicClient,
       });
-      const contractName = await contract.read.name();
-      const contractSymbol = await contract.read.symbol();
-      const contractTotalSuply = await contract.read.totalSupply();
-      setContractParams({
-        name: contractName,
-        symbol: contractSymbol,
-        totalSupply: contractTotalSuply,
+      const tokenName = await tokenContract.read.name();
+      const tokenSymbol = await tokenContract.read.symbol();
+      const tokenTotalSuply = await tokenContract.read.totalSupply();
+      // Define data using sfs contract
+      const sfsContract = getContract({
+        address: chainToSupportedChainConfig(chain).contracts.sfs,
+        abi: sfsAbi,
+        publicClient: publicClient,
+      });
+      const tokenSfsTokenId = await sfsContract.read.getTokenId([
+        props.contract,
+      ]);
+      const tokenSfsBalance = await sfsContract.read.balances([
+        tokenSfsTokenId,
+      ]);
+      // Save loaded data
+      setTokenParams({
+        name: tokenName,
+        symbol: tokenSymbol,
+        totalSupply: tokenTotalSuply,
+        sfsBalance: tokenSfsBalance,
       });
     } catch (error) {
       handleError(error as Error, true);
@@ -132,9 +151,9 @@ function TokenCard(props: { contract: `0x${string}` }) {
         alignItems="flex-start"
       >
         {/* Name */}
-        {contractParams ? (
+        {tokenParams ? (
           <Typography variant="h6" fontWeight={700}>
-            {contractParams.name} ({contractParams.symbol})
+            {tokenParams.name} ({tokenParams.symbol})
           </Typography>
         ) : (
           <Skeleton height={32} width={120} />
@@ -151,31 +170,52 @@ function TokenCard(props: { contract: `0x${string}` }) {
         <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
           <Typography color="text.secondary">Total Supply</Typography>
           <Typography color="text.secondary">-</Typography>
-          {contractParams ? (
+          {tokenParams ? (
             <Typography fontWeight={700}>
-              {String(contractParams.totalSupply)} tokens
+              {String(tokenParams.totalSupply)} tokens
             </Typography>
           ) : (
             <Skeleton height={24} width={60} />
           )}
         </Stack>
         {/* Earning */}
-        {/* TODO: Define earnings */}
         <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
           <Typography color="text.secondary">Earnings</Typography>
           <Typography color="text.secondary">-</Typography>
-          <Skeleton height={28} width={60} />
+          {tokenParams ? (
+            <Typography fontWeight={700}>
+              {formatEther(tokenParams.sfsBalance)}{" "}
+              {chainToSupportedChainConfig(chain).chain.nativeCurrency.symbol}
+            </Typography>
+          ) : (
+            <Skeleton height={28} width={60} />
+          )}
         </Stack>
         {/* Actions */}
         {/* TODO: Implement actions */}
         <Stack direction="column" spacing={1} alignItems="flex-start" mt={1}>
-          <MediumLoadingButton variant="contained" disabled>
+          <MediumLoadingButton
+            variant="contained"
+            onClick={() =>
+              showToastWarning("This feature is not yet implemented")
+            }
+          >
             🎮 Manage
           </MediumLoadingButton>
-          <MediumLoadingButton variant="outlined">
+          <MediumLoadingButton
+            variant="outlined"
+            onClick={() =>
+              showToastWarning("This feature is not yet implemented")
+            }
+          >
             🦊 Add to MetaMask
           </MediumLoadingButton>
-          <MediumLoadingButton variant="outlined">
+          <MediumLoadingButton
+            variant="outlined"
+            onClick={() =>
+              showToastWarning("This feature is not yet implemented")
+            }
+          >
             💸 Withdraw earnings
           </MediumLoadingButton>
         </Stack>

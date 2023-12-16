@@ -14,6 +14,12 @@ export default function useToasts() {
     });
   };
 
+  let showToastWarning = function (message: string) {
+    enqueueSnackbar(message, {
+      variant: "warning",
+    });
+  };
+
   let showToastError = function (error: any) {
     const prettyError = errorToPrettyError(error);
     enqueueSnackbar(truncate(prettyError.message, { length: 256 }), {
@@ -23,6 +29,7 @@ export default function useToasts() {
 
   return {
     showToastSuccess,
+    showToastWarning,
     showToastError,
   };
 }
