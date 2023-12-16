@@ -29,6 +29,7 @@ import {
   useContractRead,
   useNetwork,
   usePublicClient,
+  useWalletClient,
 } from "wagmi";
 
 /**
@@ -76,6 +77,7 @@ export default function Tokens() {
 function TokenCard(props: { contract: `0x${string}` }) {
   const { chain } = useNetwork();
   const publicClient = usePublicClient();
+  const { data: walletClient } = useWalletClient();
   const { handleError } = useError();
   const { showToastWarning } = useToasts();
   const [tokenParams, setTokenParams] = useState<
@@ -116,6 +118,24 @@ function TokenCard(props: { contract: `0x${string}` }) {
         symbol: tokenSymbol,
         totalSupply: tokenTotalSuply,
         sfsBalance: tokenSfsBalance,
+      });
+    } catch (error) {
+      handleError(error as Error, true);
+    }
+  }
+
+  async function addToMetamask() {
+    try {
+      if (!walletClient) {
+        throw new Error("Wallet is not connected");
+      }
+      const success = await walletClient.watchAsset({
+        type: "ERC20",
+        options: {
+          address: props.contract,
+          decimals: 18,
+          symbol: tokenParams?.symbol as string,
+        },
       });
     } catch (error) {
       handleError(error as Error, true);
@@ -172,7 +192,7 @@ function TokenCard(props: { contract: `0x${string}` }) {
           <Typography color="text.secondary">-</Typography>
           {tokenParams ? (
             <Typography fontWeight={700}>
-              {String(tokenParams.totalSupply)} tokens
+              {formatEther(tokenParams.totalSupply)} tokens
             </Typography>
           ) : (
             <Skeleton height={24} width={60} />
@@ -204,9 +224,7 @@ function TokenCard(props: { contract: `0x${string}` }) {
           </MediumLoadingButton>
           <MediumLoadingButton
             variant="outlined"
-            onClick={() =>
-              showToastWarning("This feature is not yet implemented")
-            }
+            onClick={() => addToMetamask()}
           >
             🦊 Add to MetaMask
           </MediumLoadingButton>
