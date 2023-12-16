@@ -4,6 +4,7 @@ interface ChainConfig {
   chain: Chain;
   contracts: {
     registry: `0x${string}`;
+    sfs: `0x${string}`;
   };
 }
 
@@ -12,12 +13,17 @@ interface ChainConfig {
  */
 export function getSupportedChainConfigs(): ChainConfig[] {
   const chainConfigs: ChainConfig[] = [];
-  if (process.env.NEXT_PUBLIC_MODE_TESTNET_REGISTRY_CONTRACT_ADDRESS) {
+  if (
+    process.env.NEXT_PUBLIC_MODE_TESTNET_REGISTRY_CONTRACT_ADDRESS &&
+    process.env.NEXT_PUBLIC_MODE_TESTNET_SFS_CONTRACT_ADDRESS
+  ) {
     chainConfigs.push({
       chain: modeTestnet,
       contracts: {
         registry: process.env
           .NEXT_PUBLIC_MODE_TESTNET_REGISTRY_CONTRACT_ADDRESS as `0x${string}`,
+        sfs: process.env
+          .NEXT_PUBLIC_MODE_TESTNET_SFS_CONTRACT_ADDRESS as `0x${string}`,
       },
     });
   }
