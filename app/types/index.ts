@@ -3,4 +3,7 @@ export type NewTokenParams = {
   name?: string;
   symbol?: string;
   initialSupply?: number;
+  mintable?: boolean;
+  burnable?: boolean;
+  pausable?: boolean;
 };

@@ -6,7 +6,17 @@ import { erc20basicBytecode } from "@/contracts/bytecode/erc20basic";
 import useError from "@/hooks/useError";
 import { NewTokenParams } from "@/types";
 import { chainToSupportedChainConfig } from "@/utils/chains";
-import { Box, Stack, TextField, Typography } from "@mui/material";
+import { HelpOutlined } from "@mui/icons-material";
+import {
+  Box,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { Form, Formik } from "formik";
 import Image from "next/image";
 import Link from "next/link";
@@ -29,6 +39,7 @@ export default function NewToken() {
     | "STEP_ONE"
     | "STEP_TWO"
     | "STEP_THREE"
+    | "STEP_FOUR"
     | "STEP_FINAL"
     | "STEP_SUCCESS_MESSAGE"
   >("STEP_ONE");
@@ -54,6 +65,14 @@ export default function NewToken() {
         )}
         {step === "STEP_THREE" && (
           <StepThree
+            params={params}
+            onCompleted={(updatedParams) => {
+              setStep("STEP_FOUR"), setParams(updatedParams);
+            }}
+          />
+        )}
+        {step === "STEP_FOUR" && (
+          <StepFour
             params={params}
             onCompleted={(updatedParams) => {
               setStep("STEP_FINAL"), setParams(updatedParams);
@@ -277,6 +296,124 @@ function StepThree(props: {
   );
 }
 
+function StepFour(props: {
+  params: NewTokenParams;
+  onCompleted: (updatedParams: NewTokenParams) => void;
+}) {
+  const { handleError } = useError();
+
+  const [formValues, setFormValues] = useState({
+    mintable: false,
+    burnable: false,
+    pausable: false,
+  });
+  const formValidationSchema = yup.object({
+    mintable: yup.boolean().required(),
+    burnable: yup.boolean().required(),
+    pausable: yup.boolean().required(),
+  });
+  const [isFormSubmitting, setIsFormSubmitting] = useState(false);
+
+  async function submit(values: any) {
+    try {
+      props.onCompleted({
+        ...props.params,
+        mintable: values.mintable,
+        burnable: values.burnable,
+        pausable: values.pausable,
+      });
+    } catch (error) {
+      handleError(error as Error, true);
+      setIsFormSubmitting(false);
+    }
+  }
+
+  return (
+    <>
+      <Typography variant="h4" fontWeight={700} textAlign="center">
+        🥣 Cooking - Step 4
+      </Typography>
+      <Typography textAlign="center" mt={1}>
+        What features do you want to add to your token?
+      </Typography>
+      <Formik
+        initialValues={formValues}
+        validationSchema={formValidationSchema}
+        onSubmit={submit}
+      >
+        {({ values, errors, touched, handleChange, setValues }) => (
+          <Form
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <FormikHelper onChange={(values: any) => setFormValues(values)} />
+            <FormGroup sx={{ mt: 2 }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <FormControlLabel
+                  id="mintable"
+                  name="mintable"
+                  label="Mintable"
+                  value={values.mintable}
+                  onChange={handleChange}
+                  control={<Checkbox />}
+                />
+                <Tooltip title="Contract owner will be able to create more tokens">
+                  <HelpOutlined
+                    sx={{ fontSize: 18, color: "text.secondary" }}
+                  />
+                </Tooltip>
+              </Stack>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <FormControlLabel
+                  id="burnable"
+                  name="burnable"
+                  label="Burnable"
+                  value={values.burnable}
+                  onChange={handleChange}
+                  control={<Checkbox />}
+                />
+                <Tooltip title="Token holders will be able to destroy their tokens">
+                  <HelpOutlined
+                    sx={{ fontSize: 18, color: "text.secondary" }}
+                  />
+                </Tooltip>
+              </Stack>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <FormControlLabel
+                  id="pausable"
+                  name="pausable"
+                  label="Pausable"
+                  value={values.pausable}
+                  onChange={handleChange}
+                  control={<Checkbox />}
+                />
+                <Tooltip title="Contract owner will be able to pause the functionality">
+                  <HelpOutlined
+                    sx={{ fontSize: 18, color: "text.secondary" }}
+                  />
+                </Tooltip>
+              </Stack>
+            </FormGroup>
+            <LargeLoadingButton
+              type="submit"
+              variant="outlined"
+              loading={isFormSubmitting}
+              disabled={isFormSubmitting}
+              sx={{ mt: 2 }}
+            >
+              Next
+            </LargeLoadingButton>
+          </Form>
+        )}
+      </Formik>
+    </>
+  );
+}
+
 function StepFinal(props: { params: NewTokenParams; onCompleted: () => void }) {
   const { handleError } = useError();
   const [isFormSubmitting, setIsFormSubmitting] = useState(false);
@@ -291,7 +428,12 @@ function StepFinal(props: { params: NewTokenParams; onCompleted: () => void }) {
       if (!walletClient || !address) {
         throw new Error("Wallet is not connected");
       }
-      if (props.params.type === "ERC20") {
+      if (
+        props.params.type === "ERC20" &&
+        !props.params.mintable &&
+        !props.params.burnable &&
+        !props.params.pausable
+      ) {
         const transactionHash = await walletClient?.deployContract({
           abi: erc20basicAbi,
           account: address,
@@ -308,7 +450,9 @@ function StepFinal(props: { params: NewTokenParams; onCompleted: () => void }) {
         props.onCompleted();
       } else {
         // TODO: Implement this case
-        throw new Error("Selected token type is not supported");
+        throw new Error(
+          "Some of the selected parameters are not yet supported"
+        );
       }
     } catch (error) {
       handleError(error as Error, true);
@@ -336,6 +480,24 @@ function StepFinal(props: { params: NewTokenParams; onCompleted: () => void }) {
       <Stack direction="row" spacing={1} mt={1}>
         <Typography color="text.secondary">Number of tokens -</Typography>
         <Typography fontWeight={700}>{props.params.initialSupply}</Typography>
+      </Stack>
+      <Stack direction="row" spacing={1} mt={1}>
+        <Typography color="text.secondary">Mintable -</Typography>
+        <Typography fontWeight={700}>
+          {props.params.mintable ? "✅" : "❌"}
+        </Typography>
+      </Stack>
+      <Stack direction="row" spacing={1} mt={1}>
+        <Typography color="text.secondary">Burnable -</Typography>
+        <Typography fontWeight={700}>
+          {props.params.burnable ? "✅" : "❌"}
+        </Typography>
+      </Stack>
+      <Stack direction="row" spacing={1} mt={1}>
+        <Typography color="text.secondary">Pausable -</Typography>
+        <Typography fontWeight={700}>
+          {props.params.pausable ? "✅" : "❌"}
+        </Typography>
       </Stack>
       <LargeLoadingButton
         type="submit"
