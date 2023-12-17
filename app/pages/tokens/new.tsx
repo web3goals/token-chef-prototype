@@ -428,12 +428,7 @@ function StepFinal(props: { params: NewTokenParams; onCompleted: () => void }) {
       if (!walletClient || !address) {
         throw new Error("Wallet is not connected");
       }
-      if (
-        props.params.type === "ERC20" &&
-        !props.params.mintable &&
-        !props.params.burnable &&
-        !props.params.pausable
-      ) {
+      if (props.params.type === "ERC20") {
         const transactionHash = await walletClient?.deployContract({
           abi: erc20basicAbi,
           account: address,
