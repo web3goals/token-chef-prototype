@@ -1,6 +1,6 @@
 # 👨‍🍳‍ TokenChef
 
-Cook a token in a few click and spice it up with an opportunity to get a share of transaction fees
+Cook a token in a few clicks and spice it up with an opportunity to get a share of transaction fees
 
 Powered by [Mode SFS](https://www.mode.network/)
 

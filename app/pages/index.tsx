@@ -43,7 +43,7 @@ export default function Landing() {
         {/* Right part */}
         <Box sx={{ textAlign: { xs: "center", md: "start" }, ml: { md: 3 } }}>
           <Typography variant="h2" fontWeight={700}>
-            Cook a token in a few click
+            Cook a token in a few clicks
           </Typography>
           <Typography variant="h5" mt={1}>
             And spice it up with an opportunity to get a share of transaction
