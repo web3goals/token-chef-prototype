@@ -2,6 +2,7 @@ import EntityList from "@/components/entity/EntityList";
 import Layout from "@/components/layout";
 import {
   CardBox,
+  FullWidthSkeleton,
   LargeLoadingButton,
   MediumLoadingButton,
 } from "@/components/styled";
@@ -16,9 +17,12 @@ import { addressToShortAddress } from "@/utils/converters";
 import {
   Avatar,
   Box,
+  Menu,
+  MenuItem,
   Link as MuiLink,
   Skeleton,
   Stack,
+  SxProps,
   Typography,
 } from "@mui/material";
 import Link from "next/link";
@@ -77,9 +81,7 @@ export default function Tokens() {
 function TokenCard(props: { contract: `0x${string}` }) {
   const { chain } = useNetwork();
   const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
   const { handleError } = useError();
-  const { showToastWarning } = useToasts();
   const [tokenParams, setTokenParams] = useState<
     | { name: string; symbol: string; totalSupply: bigint; sfsBalance: bigint }
     | undefined
@@ -118,24 +120,6 @@ function TokenCard(props: { contract: `0x${string}` }) {
         symbol: tokenSymbol,
         totalSupply: tokenTotalSuply,
         sfsBalance: tokenSfsBalance,
-      });
-    } catch (error) {
-      handleError(error as Error, true);
-    }
-  }
-
-  async function addToMetamask() {
-    try {
-      if (!walletClient) {
-        throw new Error("Wallet is not connected");
-      }
-      const success = await walletClient.watchAsset({
-        type: "ERC20",
-        options: {
-          address: props.contract,
-          decimals: 18,
-          symbol: tokenParams?.symbol as string,
-        },
       });
     } catch (error) {
       handleError(error as Error, true);
@@ -183,7 +167,7 @@ function TokenCard(props: { contract: `0x${string}` }) {
           <Typography color="text.secondary">Contract</Typography>
           <Typography color="text.secondary">-</Typography>
           <MuiLink href={contractLink} target="_blank" fontWeight={700}>
-            {addressToShortAddress(props.contract)}
+            🔗 {addressToShortAddress(props.contract)}
           </MuiLink>
         </Stack>
         {/* Supply */}
@@ -212,32 +196,110 @@ function TokenCard(props: { contract: `0x${string}` }) {
           )}
         </Stack>
         {/* Actions */}
-        {/* TODO: Implement actions */}
-        <Stack direction="column" spacing={1} alignItems="flex-start" mt={1}>
-          <MediumLoadingButton
-            variant="contained"
-            onClick={() =>
-              showToastWarning("This feature is not yet implemented")
-            }
-          >
-            🎮 Manage
-          </MediumLoadingButton>
-          <MediumLoadingButton
-            variant="outlined"
-            onClick={() => addToMetamask()}
-          >
-            🦊 Add to MetaMask
-          </MediumLoadingButton>
-          <MediumLoadingButton
-            variant="outlined"
-            onClick={() =>
-              showToastWarning("This feature is not yet implemented")
-            }
-          >
-            💸 Withdraw earnings
-          </MediumLoadingButton>
-        </Stack>
+        {tokenParams ? (
+          <Stack direction="column" spacing={1} alignItems="flex-start" mt={1}>
+            <TokenCardFunctionsButton contract={props.contract} />
+            <TokenCardMetamaskButton
+              contract={props.contract}
+              symbol={tokenParams.symbol}
+            />
+            <TokenCardAddEarningsButton contract={props.contract} />
+          </Stack>
+        ) : (
+          <FullWidthSkeleton />
+        )}
       </Box>
     </CardBox>
+  );
+}
+
+function TokenCardFunctionsButton(props: { contract: `0x${string}` }) {
+  const { showToastWarning } = useToasts();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  function handleClick(event: React.MouseEvent<HTMLElement>) {
+    setAnchorEl(event.currentTarget);
+  }
+
+  function handleClose() {
+    setAnchorEl(null);
+  }
+
+  function handleClickMenuItem() {
+    setAnchorEl(null);
+    showToastWarning("This feature is not yet supported");
+  }
+
+  return (
+    <>
+      <MediumLoadingButton
+        aria-controls={open ? "functions-menu" : undefined}
+        aria-haspopup="true"
+        aria-expanded={open ? "true" : undefined}
+        onClick={handleClick}
+        variant="contained"
+      >
+        ➡️ Execute contract function
+      </MediumLoadingButton>
+      <Menu
+        id="functions-menu"
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        transformOrigin={{ horizontal: "left", vertical: "top" }}
+        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+      >
+        <MenuItem onClick={handleClickMenuItem}>💸 Transfer</MenuItem>
+        <MenuItem onClick={handleClickMenuItem}>🆕 Mint</MenuItem>
+        <MenuItem onClick={handleClickMenuItem}>🔥 Burn</MenuItem>
+        <MenuItem onClick={handleClickMenuItem}>⏸️ Pause</MenuItem>
+      </Menu>
+    </>
+  );
+}
+
+function TokenCardMetamaskButton(props: {
+  contract: `0x${string}`;
+  symbol: string;
+}) {
+  const { data: walletClient } = useWalletClient();
+  const { handleError } = useError();
+
+  async function addToMetamask() {
+    try {
+      if (!walletClient) {
+        throw new Error("Wallet is not connected");
+      }
+      const success = await walletClient.watchAsset({
+        type: "ERC20",
+        options: {
+          address: props.contract,
+          decimals: 18,
+          symbol: props.symbol,
+        },
+      });
+    } catch (error) {
+      handleError(error as Error, true);
+    }
+  }
+
+  return (
+    <MediumLoadingButton variant="outlined" onClick={() => addToMetamask()}>
+      🦊 Add to MetaMask
+    </MediumLoadingButton>
+  );
+}
+
+function TokenCardAddEarningsButton(props: { contract: `0x${string}` }) {
+  const { showToastWarning } = useToasts();
+
+  return (
+    <MediumLoadingButton
+      variant="outlined"
+      onClick={() => showToastWarning("This feature is not yet supported")}
+    >
+      💰 Withdraw earnings
+    </MediumLoadingButton>
   );
 }
