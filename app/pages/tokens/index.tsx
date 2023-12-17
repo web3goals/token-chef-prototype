@@ -1,3 +1,4 @@
+import WithdrawEarningsDialog from "@/components/dialog/WithdrawEarningsDialog";
 import EntityList from "@/components/entity/EntityList";
 import Layout from "@/components/layout";
 import {
@@ -6,6 +7,7 @@ import {
   LargeLoadingButton,
   MediumLoadingButton,
 } from "@/components/styled";
+import { DialogContext } from "@/context/dialog";
 import { registryAbi } from "@/contracts/abi/registry";
 import { sfsAbi } from "@/contracts/abi/sfs";
 import { tokenAbi } from "@/contracts/abi/token";
@@ -22,11 +24,10 @@ import {
   Link as MuiLink,
   Skeleton,
   Stack,
-  SxProps,
   Typography,
 } from "@mui/material";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { formatEther, getContract, zeroAddress } from "viem";
 import {
   useAccount,
@@ -83,7 +84,13 @@ function TokenCard(props: { contract: `0x${string}` }) {
   const publicClient = usePublicClient();
   const { handleError } = useError();
   const [tokenParams, setTokenParams] = useState<
-    | { name: string; symbol: string; totalSupply: bigint; sfsBalance: bigint }
+    | {
+        name: string;
+        symbol: string;
+        totalSupply: bigint;
+        sfsTokenId: bigint;
+        sfsBalance: bigint;
+      }
     | undefined
   >();
   const contractLink = `${
@@ -119,6 +126,7 @@ function TokenCard(props: { contract: `0x${string}` }) {
         name: tokenName,
         symbol: tokenSymbol,
         totalSupply: tokenTotalSuply,
+        sfsTokenId: tokenSfsTokenId,
         sfsBalance: tokenSfsBalance,
       });
     } catch (error) {
@@ -203,7 +211,11 @@ function TokenCard(props: { contract: `0x${string}` }) {
               contract={props.contract}
               symbol={tokenParams.symbol}
             />
-            <TokenCardAddEarningsButton contract={props.contract} />
+            <TokenCardAddEarningsButton
+              contract={props.contract}
+              sfsTokenId={tokenParams.sfsTokenId}
+              sfsBalance={tokenParams.sfsBalance}
+            />
           </Stack>
         ) : (
           <FullWidthSkeleton />
@@ -291,13 +303,25 @@ function TokenCardMetamaskButton(props: {
   );
 }
 
-function TokenCardAddEarningsButton(props: { contract: `0x${string}` }) {
-  const { showToastWarning } = useToasts();
+function TokenCardAddEarningsButton(props: {
+  contract: `0x${string}`;
+  sfsTokenId: bigint;
+  sfsBalance: bigint;
+}) {
+  const { showDialog, closeDialog } = useContext(DialogContext);
 
   return (
     <MediumLoadingButton
       variant="outlined"
-      onClick={() => showToastWarning("This feature is not yet supported")}
+      onClick={() =>
+        showDialog?.(
+          <WithdrawEarningsDialog
+            sfsTokenId={props.sfsTokenId}
+            sfsBalance={props.sfsBalance}
+            onClose={closeDialog}
+          />
+        )
+      }
     >
       💰 Withdraw earnings
     </MediumLoadingButton>
