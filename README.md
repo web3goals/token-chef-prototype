@@ -11,9 +11,9 @@ Cook a token in a few clicks and spice it up with an opportunity to get a share 
 ## 🤯 How it works
 
 1. Connect wallet.
-2. Select the type, name, symbol, and other features of the token you want to launch..
-3. Approve a transaction and get a token deployed on the Mode Network.
-4. Open the page with all your tokens:
+2. Select the type, name, symbol, and other features of the token you want to launch.
+3. Approve transaction and get a token deployed on the Mode Network.
+4. Open the launched token on the page with all your tokens:
    - Add token to Metamask.
    - Execute token contract functions (Transfer, Mint, Pause, etc.).
    - Withdraw earnings received from Mode SFS.
