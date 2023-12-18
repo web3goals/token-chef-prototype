@@ -4,28 +4,36 @@ pragma solidity ^0.8.9;
 import "./IRegistry.sol";
 
 /**
- * @notice A contract that stores account contracts.
+ * @notice A contract that stores account token contracts.
  */
 contract Registry is IRegistry {
-    mapping(address account => address[] contracts) private _accountContracts;
+    mapping(address account => address[] tokens) private _accountTokens;
+    mapping(address token => string tokenType) private _tokenTypes;
 
     constructor() {}
 
     /// **************************
     /// ***** USER FUNCTIONS *****
     /// **************************
-    function register(address recipient) external {
-        address accountContract = msg.sender;
-        _accountContracts[recipient].push(accountContract);
+    function register(address tokenOwner, string memory tokenType) external {
+        address tokenContract = msg.sender;
+        _accountTokens[tokenOwner].push(tokenContract);
+        _tokenTypes[tokenContract] = tokenType;
     }
 
     /// ***********************************
     /// ***** EXTERNAL VIEW FUNCTIONS *****
     /// ***********************************
 
-    function getContracts(
+    function getTokens(
         address account
-    ) external view returns (address[] memory contracts) {
-        return _accountContracts[account];
+    ) external view returns (address[] memory tokens) {
+        return _accountTokens[account];
+    }
+
+    function getTokenType(
+        address token
+    ) external view returns (string memory tokenType) {
+        return _tokenTypes[token];
     }
 }

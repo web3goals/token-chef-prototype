@@ -33,8 +33,11 @@ describe("ERC20Basic", function () {
         ethers.ZeroAddress
       );
     // Check registry
-    expect(await registryContract.getContracts(userOne)).includes(
+    expect(await registryContract.getTokens(userOne)).includes(
       await erc20Contract.getAddress()
     );
+    expect(
+      await registryContract.getTokenType(await erc20Contract.getAddress())
+    ).is.equal("ERC20_BASIC");
   });
 });

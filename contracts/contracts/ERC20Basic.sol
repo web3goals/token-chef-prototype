@@ -17,7 +17,7 @@ contract ERC20Basic is ERC20 {
         address sfsAddress
     ) ERC20(name, symbol) {
         _mint(msg.sender, initialSupply);
-        IRegistry(registyAddress).register(msg.sender);
+        IRegistry(registyAddress).register(msg.sender, "ERC20_BASIC");
         if (sfsAddress != address(0)) {
             ISFS(sfsAddress).register(msg.sender);
         }

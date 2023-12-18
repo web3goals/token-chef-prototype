@@ -2,5 +2,5 @@
 pragma solidity ^0.8.9;
 
 interface IRegistry {
-    function register(address recipient) external;
+    function register(address tokenOwner, string memory tokenType) external;
 }
