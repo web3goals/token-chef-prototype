@@ -20,12 +20,12 @@ Cook a token in a few clicks and spice it up with an opportunity to get a share 
 
 ## ⚒️ How it's made
 
-1. Mode Network is used as a blockchain to store contracts with launched tokens.
-2. Mode SFS is used as a techonology that gives an opportuine to get a share of transaction fees.
-3. OpenZeppelin is used as a provider of audited code for token contracts.
+- Mode Network is used as a blockchain to store contracts with launched tokens.
+- Mode SFS is used as a techonology that gives an opportuine to get a share of transaction fees.
+- OpenZeppelin is used as a provider of audited code for token contracts.
 
 ## 🔮 What's next
 
-1. Implement more token features to make them suitable for any case.
-2. Add AI assistant to help people cook tokens and use them better.
-3. Integrate with exchanges and marketplaces to give people more ways to use their tokens.
+- Implement more token features to make them suitable for any case.
+- Add AI assistant to help people cook tokens and use them better.
+- Integrate with exchanges and marketplaces to give people more ways to use their tokens.
