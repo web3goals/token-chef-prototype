@@ -8,15 +8,34 @@ export const registryAbi = [
     inputs: [
       {
         internalType: "address",
+        name: "token",
+        type: "address",
+      },
+    ],
+    name: "getTokenType",
+    outputs: [
+      {
+        internalType: "string",
+        name: "tokenType",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
         name: "account",
         type: "address",
       },
     ],
-    name: "getContracts",
+    name: "getTokens",
     outputs: [
       {
         internalType: "address[]",
-        name: "contracts",
+        name: "tokens",
         type: "address[]",
       },
     ],
@@ -27,8 +46,13 @@ export const registryAbi = [
     inputs: [
       {
         internalType: "address",
-        name: "recipient",
+        name: "tokenOwner",
         type: "address",
+      },
+      {
+        internalType: "string",
+        name: "tokenType",
+        type: "string",
       },
     ],
     name: "register",

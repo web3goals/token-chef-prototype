@@ -8,6 +8,7 @@ import {
   MediumLoadingButton,
 } from "@/components/styled";
 import { DialogContext } from "@/context/dialog";
+import { erc20basicAbi } from "@/contracts/abi/erc20basic";
 import { registryAbi } from "@/contracts/abi/registry";
 import { sfsAbi } from "@/contracts/abi/sfs";
 import { tokenAbi } from "@/contracts/abi/token";
@@ -47,7 +48,7 @@ export default function Tokens() {
   const { data: contracts } = useContractRead({
     address: chainToSupportedChainConfig(chain).contracts.registry,
     abi: registryAbi,
-    functionName: "getContracts",
+    functionName: "getTokens",
     args: [address || zeroAddress],
     enabled: Boolean(address),
   });
@@ -85,9 +86,10 @@ function TokenCard(props: { contract: `0x${string}` }) {
   const { handleError } = useError();
   const [tokenParams, setTokenParams] = useState<
     | {
+        type: string;
         name: string;
         symbol: string;
-        totalSupply: bigint;
+        totalSupply: bigint | undefined;
         sfsTokenId: bigint;
         sfsBalance: bigint;
       }
@@ -100,6 +102,13 @@ function TokenCard(props: { contract: `0x${string}` }) {
   async function loadData() {
     try {
       setTokenParams(undefined);
+      // Define token type
+      const tokenType = await publicClient.readContract({
+        address: chainToSupportedChainConfig(chain).contracts.registry,
+        abi: registryAbi,
+        functionName: "getTokenType",
+        args: [props.contract],
+      });
       // Define data using token contract
       const tokenContract = getContract({
         address: props.contract,
@@ -108,7 +117,13 @@ function TokenCard(props: { contract: `0x${string}` }) {
       });
       const tokenName = await tokenContract.read.name();
       const tokenSymbol = await tokenContract.read.symbol();
-      const tokenTotalSuply = await tokenContract.read.totalSupply();
+      const tokenTotalSupply = tokenType.includes("ERC20")
+        ? await publicClient.readContract({
+            address: props.contract,
+            abi: erc20basicAbi,
+            functionName: "totalSupply",
+          })
+        : undefined;
       // Define data using sfs contract
       const sfsContract = getContract({
         address: chainToSupportedChainConfig(chain).contracts.sfs,
@@ -123,9 +138,10 @@ function TokenCard(props: { contract: `0x${string}` }) {
       ]);
       // Save loaded data
       setTokenParams({
+        type: tokenType,
         name: tokenName,
         symbol: tokenSymbol,
-        totalSupply: tokenTotalSuply,
+        totalSupply: tokenTotalSupply,
         sfsTokenId: tokenSfsTokenId,
         sfsBalance: tokenSfsBalance,
       });
@@ -151,7 +167,9 @@ function TokenCard(props: { contract: `0x${string}` }) {
             background: theme.palette.divider,
           }}
         >
-          <Typography fontSize={36}>🍥</Typography>
+          <Typography fontSize={36}>
+            {tokenParams?.type.includes("ERC721") ? "🖼️" : "🪙"}
+          </Typography>
         </Avatar>
       </Box>
       {/* Right part */}
@@ -179,17 +197,17 @@ function TokenCard(props: { contract: `0x${string}` }) {
           </MuiLink>
         </Stack>
         {/* Supply */}
-        <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
-          <Typography color="text.secondary">Total Supply</Typography>
-          <Typography color="text.secondary">-</Typography>
-          {tokenParams ? (
+        {tokenParams?.totalSupply ? (
+          <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
+            <Typography color="text.secondary">Total Supply</Typography>
+            <Typography color="text.secondary">-</Typography>
             <Typography fontWeight={700}>
               {formatEther(tokenParams.totalSupply)} tokens
             </Typography>
-          ) : (
-            <Skeleton height={24} width={60} />
-          )}
-        </Stack>
+          </Stack>
+        ) : (
+          <></>
+        )}
         {/* Earning */}
         <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
           <Typography color="text.secondary">Earnings</Typography>
