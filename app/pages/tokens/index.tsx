@@ -23,7 +23,6 @@ import {
   Menu,
   MenuItem,
   Link as MuiLink,
-  Skeleton,
   Stack,
   Typography,
 } from "@mui/material";
@@ -155,6 +154,10 @@ function TokenCard(props: { contract: `0x${string}` }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.contract]);
 
+  if (!tokenParams) {
+    return <FullWidthSkeleton />;
+  }
+
   return (
     <CardBox sx={{ display: "flex", flexDirection: "row" }}>
       {/* Left part */}
@@ -167,8 +170,8 @@ function TokenCard(props: { contract: `0x${string}` }) {
             background: theme.palette.divider,
           }}
         >
-          <Typography fontSize={36}>
-            {tokenParams?.type.includes("ERC721") ? "🖼️" : "🪙"}
+          <Typography fontSize={28}>
+            {tokenParams.type.includes("ERC721") ? "🖼️" : "🪙"}
           </Typography>
         </Avatar>
       </Box>
@@ -181,13 +184,9 @@ function TokenCard(props: { contract: `0x${string}` }) {
         alignItems="flex-start"
       >
         {/* Name */}
-        {tokenParams ? (
-          <Typography variant="h6" fontWeight={700}>
-            {tokenParams.name} ({tokenParams.symbol})
-          </Typography>
-        ) : (
-          <Skeleton height={32} width={120} />
-        )}
+        <Typography variant="h6" fontWeight={700}>
+          {tokenParams.name} ({tokenParams.symbol})
+        </Typography>
         {/* Link */}
         <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
           <Typography color="text.secondary">Contract</Typography>
@@ -197,7 +196,7 @@ function TokenCard(props: { contract: `0x${string}` }) {
           </MuiLink>
         </Stack>
         {/* Supply */}
-        {tokenParams?.totalSupply ? (
+        {tokenParams.totalSupply !== undefined && (
           <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
             <Typography color="text.secondary">Total Supply</Typography>
             <Typography color="text.secondary">-</Typography>
@@ -205,39 +204,29 @@ function TokenCard(props: { contract: `0x${string}` }) {
               {formatEther(tokenParams.totalSupply)} tokens
             </Typography>
           </Stack>
-        ) : (
-          <></>
         )}
         {/* Earning */}
         <Stack direction="row" spacing={1} alignItems="center" mt={0.5}>
           <Typography color="text.secondary">Earnings</Typography>
           <Typography color="text.secondary">-</Typography>
-          {tokenParams ? (
-            <Typography fontWeight={700}>
-              {formatEther(tokenParams.sfsBalance)}{" "}
-              {chainToSupportedChainConfig(chain).chain.nativeCurrency.symbol}
-            </Typography>
-          ) : (
-            <Skeleton height={28} width={60} />
-          )}
+          <Typography fontWeight={700}>
+            {formatEther(tokenParams.sfsBalance)}{" "}
+            {chainToSupportedChainConfig(chain).chain.nativeCurrency.symbol}
+          </Typography>
         </Stack>
         {/* Actions */}
-        {tokenParams ? (
-          <Stack direction="column" spacing={1} alignItems="flex-start" mt={1}>
-            <TokenCardFunctionsButton contract={props.contract} />
-            <TokenCardMetamaskButton
-              contract={props.contract}
-              symbol={tokenParams.symbol}
-            />
-            <TokenCardAddEarningsButton
-              contract={props.contract}
-              sfsTokenId={tokenParams.sfsTokenId}
-              sfsBalance={tokenParams.sfsBalance}
-            />
-          </Stack>
-        ) : (
-          <FullWidthSkeleton />
-        )}
+        <Stack direction="column" spacing={1} alignItems="flex-start" mt={1}>
+          <TokenCardFunctionsButton contract={props.contract} />
+          <TokenCardMetamaskButton
+            contract={props.contract}
+            symbol={tokenParams.symbol}
+          />
+          <TokenCardAddEarningsButton
+            contract={props.contract}
+            sfsTokenId={tokenParams.sfsTokenId}
+            sfsBalance={tokenParams.sfsBalance}
+          />
+        </Stack>
       </Box>
     </CardBox>
   );

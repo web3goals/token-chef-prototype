@@ -2,7 +2,9 @@ import FormikHelper from "@/components/helper/FormikHelper";
 import Layout from "@/components/layout";
 import { LargeLoadingButton } from "@/components/styled";
 import { erc20basicAbi } from "@/contracts/abi/erc20basic";
+import { erc721BasicAbi } from "@/contracts/abi/erc721basic";
 import { erc20basicBytecode } from "@/contracts/bytecode/erc20basic";
+import { erc721BasicBytecode } from "@/contracts/bytecode/erc721basic";
 import useError from "@/hooks/useError";
 import { NewTokenParams } from "@/types";
 import { chainToSupportedChainConfig } from "@/utils/chains";
@@ -223,7 +225,7 @@ function StepThree(props: {
   const { handleError } = useError();
 
   const [formValues, setFormValues] = useState({
-    initialSupply: 0,
+    initialSupply: 1,
   });
   const formValidationSchema = yup.object({
     initialSupply: yup.number().required(),
@@ -277,7 +279,7 @@ function StepThree(props: {
               onChange={handleChange}
               error={touched.initialSupply && Boolean(errors.initialSupply)}
               helperText={touched.initialSupply && errors.initialSupply}
-              disabled={isFormSubmitting}
+              disabled={isFormSubmitting || props.params.type === "ERC721"}
               sx={{ mt: 2 }}
             />
             <LargeLoadingButton
@@ -443,8 +445,21 @@ function StepFinal(props: { params: NewTokenParams; onCompleted: () => void }) {
         });
         await publicClient.waitForTransactionReceipt({ hash: transactionHash });
         props.onCompleted();
+      } else if (props.params.type === "ERC721") {
+        const transactionHash = await walletClient?.deployContract({
+          abi: erc721BasicAbi,
+          account: address,
+          args: [
+            props.params.name as string,
+            props.params.symbol as string,
+            chainToSupportedChainConfig(chain).contracts.registry,
+            chainToSupportedChainConfig(chain).contracts.sfs,
+          ],
+          bytecode: erc721BasicBytecode,
+        });
+        await publicClient.waitForTransactionReceipt({ hash: transactionHash });
+        props.onCompleted();
       } else {
-        // TODO: Implement this case
         throw new Error(
           "Some of the selected parameters are not yet supported"
         );
